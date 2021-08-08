@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply h-full
+  }
+  body {
+    @apply h-full
+  }
+  h1 {
+    @apply text-xs font-semibold pr-24 mb-2 uppercase;
+  }
+  h2 {
+    @apply text-2xl font-semibold mb-6;
+  }
+}
