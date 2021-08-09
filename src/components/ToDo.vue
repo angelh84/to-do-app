@@ -3,13 +3,18 @@
     <!-- Header button -->
     <div class="flex fixed justify-between top-0 left-0 w-full p-6">
       <t-button 
-        class="text-color text-sm text-red-500 hover:underline"
+        :class="[
+          'text-color text-sm text-red-500 hover:underline',
+          'transition-opacity opacity-0 duration-700',
+          {'opacity-100': itemsChecked.length}
+        ]"
         variant="text"
       >
         Delete Selected
       </t-button>
       <t-button
-        class="rounded text-sm transition-opacity opacity-0 duration-800"
+        class="rounded text-sm transition-opacity opacity-0 duration-700"
+        :class="{'opacity-100': itemsChecked.length}"
         variant="secondary"
       >
         Edit Selected
@@ -151,6 +156,11 @@ export default {
       toDoList: [],
       toDoInput: '',
       prioritySelect: ''
+    }
+  },
+  computed: {
+    itemsChecked () {
+      return this.toDoList.filter(obj => obj.checked)
     }
   },
   methods: {
