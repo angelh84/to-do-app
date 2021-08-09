@@ -35,9 +35,11 @@
 
 4. Any checked items can be deleted via the 'Delete Selected' button that appears when at least one item is checked.
 
-5. Lists can be sorted by selecting a priority under the 'Sort' drop down to the right of the app headline.
+5. All items can be selected or deselected by clicking on the checkbox next to the app headline.
 
-6. Data is saved to local storage any time the main data object is modified.
+6. Lists can be sorted by selecting a priority under the 'Sort' drop down to the right of the app headline.
+
+7. Data is saved to local storage any time the main data object is modified.
 
 
 ## Overview
