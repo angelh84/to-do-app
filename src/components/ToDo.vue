@@ -239,6 +239,7 @@ export default {
       } else {
         this.checkAll = false
       }
+
     },
     checkAll (bool) {
       if (bool) {
@@ -248,6 +249,12 @@ export default {
     sort (string) {
       this.sortByPriority(string)
     },
+    toDoList: {
+      deep: true,
+      handler() {
+        this.saveToDoList()
+      }
+    }
   },
   computed: {
     itemsChecked () {
@@ -319,9 +326,24 @@ export default {
     },
     deleteChecked () {
       this.toDoList = this.itemsUnChecked
+    },
+    getToDoList () {
+      return JSON.parse(localStorage.getItem('toDoList'))
+    },
+    saveToDoList () {
+      localStorage.setItem('toDoList', JSON.stringify(this.toDoList))
+    }
+  },
+  created () {
+    // Load toDoList from localStorage if localStorage is 
+    // available and the toDoList property has length
+    const localStorageList = this.getToDoList()
+    if (localStorage && localStorageList && localStorageList.length) {
+      this.toDoList = localStorageList
     }
   },
   mounted () {
+    // Focus list item add input when app loads.
     this.$refs.toDoInput.focus()
   }
 }
