@@ -343,7 +343,7 @@ export default {
     }
   },
   mounted () {
-    // Focus list item add input when app loads.
+    // Focus the 'add to-do item' input when app loads.
     this.$refs.toDoInput.focus()
   }
 }
