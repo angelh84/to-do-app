@@ -33,23 +33,26 @@
           v-for="(item, index) in toDoList"
           :key="index"
           :class="[
-            'flex flex-row',
+            'flex flex-row items-center',
             'w-full',
-            'p-3',
+            'p-2',
             'border-t',
             {'border-b': index === toDoList.length - 1}
           ]"
         >
-          <label class="w-full flex items-center">
+          <label class="w-full flex items-center p-1">
             <t-checkbox 
               v-model="item.checked"
               name="options"
               class="mr-4"
               :value="true"
             />
-            <span class="">{{ item.name }}</span>
+            <span>{{ item.name }}</span>
           </label>
-          <div class="w-40 text-center">
+          <div 
+            :class="labels(item.priority)"
+            class="w-40 text-center rounded text-white text-sm p-1"
+          >
             {{ item.priority }}
           </div>
         </div>
@@ -161,13 +164,27 @@ export default {
   computed: {
     itemsChecked () {
       return this.toDoList.filter(obj => obj.checked)
+    },
+    labels () {
+      return priority => {
+        switch (priority.toLowerCase()) {
+          case 'life changing':
+            return 'bg-blue-500'
+          case 'important':
+            return 'bg-red-500'
+          case 'meh':
+            return 'bg-gray-400'
+          default:
+            return 'border border-dashed rounded text-gray-400'
+        }
+      }
     }
   },
   methods: {
     addToDo () {
       this.toDoList.push({
         name: this.toDoInput,
-        priority: this.prioritySelect,
+        priority: this.prioritySelect ? this.prioritySelect : 'No priority',
         checked: false,
         timeStamp: new Date()
       })
