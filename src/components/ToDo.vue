@@ -57,13 +57,7 @@
             'text-xs sm:text-sm',
             {'text-gray-400': sort === 'Sort' || sort === ''}
           ]"
-          :options="[
-            'Order (default)',
-            'Life Changing',
-            'Important',
-            'Meh',
-            'No Priority'
-          ]"
+          :options="sortOptions"
         />
       </div>
       <template v-if="toDoList.length">
@@ -280,6 +274,15 @@ export default {
             return 'border border-dashed rounded text-gray-400'
         }
       }
+    },
+    sortOptions () {
+      const sortOptions = ['Order (default)']
+      this.toDoList.forEach(obj => {
+        sortOptions.push(obj.priority)
+      })
+      
+      // Set constructor returns only uniques in an array
+      return [...new Set(sortOptions)]
     }
   },
   methods: {
