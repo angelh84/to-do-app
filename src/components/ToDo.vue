@@ -1,7 +1,8 @@
 <template>
   <div class="flex h-full flex-col justify-between">
-    <!-- Header button -->
-    <div class="flex fixed justify-between top-0 left-0 w-full p-6">
+
+    <!-- Header buttons -->
+    <div class="flex fixed justify-between bottom-28 sm:top-0 sm:bottom-auto left-0 w-full p-6">
       <t-button 
         variant="text"
         :class="[
@@ -30,10 +31,15 @@
     <!-- Table -->
     <div :class="[
       'h-full w-full sm:w-600 mx-auto',
-      'pt-32 pr-5 pb-3 pl-5',
+      'pt-10 sm:pt-32 pr-5 pb-3 pl-5 mb-44 sm:mb-36',
       'overflow-auto'
     ]">
-      <div class="flex flex-column items-center mb-2 p-1">
+      <div 
+        :class="[
+          {'border-b-2 border-gray-300': toDoList.length},
+          'flex flex-column items-center p-1 pb-2'
+        ]"
+      >
         <t-checkbox
           v-if="toDoList.length"
           v-model="checkAll"
@@ -41,7 +47,23 @@
           :value="true"
           @click="clickCheckAll(!checkAll)"
         />
-        <h1>My to-do list</h1>
+        <h1 class="w-full">My to-do list</h1>
+        <t-select
+          v-if="toDoList.length"
+          v-model="sort"
+          placeholder="Sort"
+          :class="[
+            'text-xs sm:text-sm border-0',
+            {'text-gray-400': sort === 'Sort' || sort === ''}
+          ]"
+          :options="[
+            'Order (default)',
+            'Life Changing',
+            'Important',
+            'Meh',
+            'No Priority'
+          ]"
+        />
       </div>
       <template v-if="toDoList.length">
         <div 
@@ -51,8 +73,7 @@
             'flex flex-row items-center',
             'w-full',
             'h-14',
-            'border-t',
-            {'border-b': index === toDoList.length - 1}
+            'border-b'
           ]"
         >
           <label class="w-full flex items-center p-1 pr-4">
@@ -71,6 +92,8 @@
             <t-input
               v-else
               v-model="item.name"
+              class="text-xs sm:text-sm"
+              ref="listItem"
               placeholder="To-do item name"
             />
           </label>
@@ -79,7 +102,7 @@
             :class="[
               labels(item.priority),
               'w-40 rounded p-2',
-              'text-center text-white text-sm'
+              'text-center text-white text-xs sm:text-sm'
             ]"
           >
             {{ item.priority }}
@@ -87,6 +110,7 @@
           <t-select
             v-else
             v-model="item.priority"
+            class="text-xs sm:text-sm"
             :options="[
               'No Priority',
               'Life Changing',
@@ -94,7 +118,6 @@
               'Meh'
             ]"
           />
-
         </div>
       </template>
       <template v-else>
@@ -200,6 +223,7 @@ export default {
         'Important',
         'Meh'
       ],
+      sort: 'Sort',
       checkAll: false,
       showEditFields: false
     }
@@ -220,7 +244,10 @@ export default {
       if (bool) {
         this.toDoList.forEach(obj => obj.checked = true)
       }
-    }
+    },
+    sort (string) {
+      this.sortByPriority(string)
+    },
   },
   computed: {
     itemsChecked () {
@@ -228,6 +255,9 @@ export default {
     },
     itemsUnChecked () {
       return this.toDoList.filter(obj => !obj.checked)
+    },
+    sortByTimestamp () {
+      return this.toDoList.slice().sort((a, b) => a.timeStamp - b.timeStamp)
     },
     labels () {
       return priority => {
@@ -260,12 +290,32 @@ export default {
       this.prioritySelect = ''
     },
     clickCheckAll(val) {
+      // I needed to add this specific method even though
+      // I am watching the 'checkAll' property because
+      // I ONLY want to clear all checkboxes if I
+      // unclick the actual master checkbox next to the <h1>
+      // otherwise unclicking any other list item when 
+      // 'all' are selected will deselect all.
       if (!val) {
         this.toDoList.forEach(obj => obj.checked = false)
       }
     },
+    sortByPriority (sort) {
+      const filterByPriority = this.toDoList.filter(obj => obj.priority === sort)
+      const filterOutPriority = this.toDoList.filter(obj => obj.priority !== sort)
+      const sortedArr = [...filterByPriority, ...filterOutPriority]
+
+      this.toDoList = sort === '' || sort === 'Order (default)'
+        ? this.sortByTimestamp
+        : sortedArr
+    },
     editChecked () {
       this.showEditFields = !this.showEditFields
+      this.$nextTick(() => {
+        if (this.showEditFields) {
+          this.$refs.listItem[0].focus()
+        }
+      })
     },
     deleteChecked () {
       this.toDoList = this.itemsUnChecked
