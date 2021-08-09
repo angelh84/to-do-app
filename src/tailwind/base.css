@@ -10,9 +10,6 @@
     @apply h-full bg-no-repeat
   }
   h1 {
-    @apply text-xs font-semibold pr-24 mb-2 uppercase;
-  }
-  h2 {
-    @apply text-2xl font-semibold mb-6;
+    @apply text-2xl font-bold
   }
 }

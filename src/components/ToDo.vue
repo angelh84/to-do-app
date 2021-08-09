@@ -1,54 +1,93 @@
 <template>
-  <div class="flex h-full flex-col justify-between pb-96">
-    <div class="flex flex-col h-full w-full sm:w-600 mx-auto justify-start items-center">
-      <div 
-        v-for="(item, index) in 100"
-        :key="index"
-        :class="[
-          'flex flex-row',
-          'w-full',
-          'border-t',
-          {'border-b': index === 99}
-        ]"
+  <div class="flex h-full flex-col justify-between">
+    <!-- Header button -->
+    <div class="flex fixed justify-between top-0 left-0 w-full p-6">
+      <t-button 
+        class="text-color text-sm text-red-500 hover:underline"
+        variant="text"
       >
-        <label class="w-full">
-          <t-checkbox 
-            name="options"
-            :value="true"
-          />
-          <span class="">Hello World {{ index }}</span>
-        </label>
-        <div class="w-40 text-center">
-          Life Changing
-        </div>
-        <div class="w-40 text-center">
-          
-        </div>
-      </div>
+        Delete Selected
+      </t-button>
+      <t-button
+        class="rounded text-sm transition-opacity opacity-0 duration-800"
+        variant="secondary"
+      >
+        Edit Selected
+      </t-button>
     </div>
-    <div class="p-6 w-full sm:pl-12 sm:pr-12 bg-gray-700 fixed bottom-0 flex flex-col sm:flex-row">
+
+    <!-- Table -->
+    <div :class="[
+      'h-full w-full sm:w-600 mx-auto',
+      'pt-32 pr-5 pb-3 pl-5',
+      'overflow-auto'
+    ]">
+      <h1 class="mb-4">My to-do list</h1>
+      <template v-if="toDoList.length">
+        <div 
+          v-for="(item, index) in toDoList"
+          :key="index"
+          :class="[
+            'flex flex-row',
+            'w-full',
+            'p-3',
+            'border-t',
+            {'border-b': index === toDoList.length - 1}
+          ]"
+        >
+          <label class="w-full flex items-center">
+            <t-checkbox 
+              v-model="item.checked"
+              name="options"
+              class="mr-4"
+              :value="true"
+            />
+            <span class="">{{ item.name }}</span>
+          </label>
+          <div class="w-40 text-center">
+            {{ item.priority }}
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <p :class="[
+          'border-2 border-dashed',
+          'rounded text-gray-400 p-3'
+        ]">
+          Add your first to-do item below.
+        </p>
+      </template>
+    </div>
+
+    <!-- Footer fields -->
+    <div :class="[
+      'fixed bottom-0',
+      'flex flex-col sm:flex-row',
+      'p-6 sm:pr-12 sm:pl-12', 
+      'bg-gray-700',
+      'w-full'
+    ]">
       <div class="flex flex-row mb-4 w-full">
         <t-input
           id="to-do-input"
-          v-model="toDo"
+          v-model="toDoInput"
           placeholder="Add your next to-do"
-          class="mr-4 w-full sm:h-16 sm:text-xl"
-          fixedClasses="border-0"
+          class="mr-4 w-full sm:h-16 sm:text-xl rounded"
           value=""
           name="to-do"
         />
         <t-select
           id="to-do-priority"
-          v-model="priority"
+          v-model="prioritySelect"
           name="priority"
           placeholder="Priority"
-          fixedClasses="border-0"
           :class="[
             'w-42',
             'hidden sm:block',
             'mr-8',
             'sm:text-xl',
-            {'text-gray-400': priority === ''}
+            'rounded',
+            {'text-gray-400': prioritySelect === ''}
           ]"
           :options="[
             'Life Changing',
@@ -58,11 +97,13 @@
         />
         <button
           type="button"
-          class="w-8 sm:w-12"
+          :disabled="!toDoInput.length"
+          :class="{'pointer-events-none': !toDoInput.length}"
+          class="w-8 sm:w-12 disabled:opacity-50"
           @click="addToDo"
         >
           <svg 
-            class="fill-current text-blue-400 hover:text-gray-50"
+            class="fill-current text-green-500 hover:text-green-300"
             xmlns="http://www.w3.org/2000/svg" 
             viewBox="0 0 24 24"
           >
@@ -73,7 +114,7 @@
       <div class="flex flex-row sm:hidden">
         <label class="flex items-center mr-4 text-sm text-gray-50">
           <t-radio 
-            v-model="priority"
+            v-model="prioritySelect"
             name="priority" 
             value="Life Changing"
           />
@@ -81,7 +122,7 @@
         </label>
         <label class="flex items-center mr-4 text-sm text-gray-50">
           <t-radio 
-            v-model="priority"
+            v-model="prioritySelect"
             name="priority" 
             value="Important"
           />
@@ -89,7 +130,7 @@
         </label>
         <label class="flex items-center mr-4 text-sm text-gray-50">
           <t-radio 
-            v-model="priority"
+            v-model="prioritySelect"
             name="priority" 
             value="Meh"
           />
@@ -107,13 +148,24 @@ export default {
   },
   data () {
     return {
-      toDo: '',
-      priority: ''
+      toDoList: [],
+      toDoInput: '',
+      prioritySelect: ''
     }
   },
   methods: {
     addToDo () {
-      console.log('click')
+      this.toDoList.push({
+        name: this.toDoInput,
+        priority: this.prioritySelect,
+        checked: false,
+        timeStamp: new Date()
+      })
+      this.clearFields()
+    },
+    clearFields () {
+      this.toDoInput = '',
+      this.prioritySelect = ''
     }
   }
 }
