@@ -3,19 +3,25 @@
     <!-- Header button -->
     <div class="flex fixed justify-between top-0 left-0 w-full p-6">
       <t-button 
+        variant="text"
         :class="[
           'text-color text-sm text-red-500 hover:underline',
-          'transition-opacity opacity-0 duration-700',
-          {'opacity-100': itemsChecked.length}
+          'transition-opacity opacity-0 duration-700 pointer-events-none',
+          {'opacity-100 pointer-events-auto': itemsChecked.length}
         ]"
-        variant="text"
+        @click="deleteChecked"
       >
         Delete Selected
       </t-button>
       <t-button
-        class="rounded text-sm transition-opacity opacity-0 duration-700"
-        :class="{'opacity-100': itemsChecked.length}"
         variant="secondary"
+        :class="[
+          'rounded text-sm',
+          'transition-opacity opacity-0 duration-700 pointer-events-none',
+          {'bg-yellow-100': showEditFields},
+          {'opacity-100 pointer-events-auto': itemsChecked.length}
+        ]"
+        @click="editChecked"
       >
         Edit Selected
       </t-button>
@@ -27,7 +33,16 @@
       'pt-32 pr-5 pb-3 pl-5',
       'overflow-auto'
     ]">
-      <h1 class="mb-4">My to-do list</h1>
+      <div class="flex flex-column items-center mb-2 p-1">
+        <t-checkbox
+          v-if="toDoList.length"
+          v-model="checkAll"
+          class="mr-4"
+          :value="true"
+          @click="clickCheckAll(!checkAll)"
+        />
+        <h1>My to-do list</h1>
+      </div>
       <template v-if="toDoList.length">
         <div 
           v-for="(item, index) in toDoList"
@@ -35,26 +50,51 @@
           :class="[
             'flex flex-row items-center',
             'w-full',
-            'p-2',
+            'h-14',
             'border-t',
             {'border-b': index === toDoList.length - 1}
           ]"
         >
-          <label class="w-full flex items-center p-1">
+          <label class="w-full flex items-center p-1 pr-4">
             <t-checkbox 
               v-model="item.checked"
               name="options"
               class="mr-4"
               :value="true"
             />
-            <span>{{ item.name }}</span>
+            <span 
+              v-if="!showEditFields || !item.checked"
+              class="break-all"
+            >
+              {{ item.name }}
+            </span>
+            <t-input
+              v-else
+              v-model="item.name"
+              placeholder="To-do item name"
+            />
           </label>
-          <div 
-            :class="labels(item.priority)"
-            class="w-40 text-center rounded text-white text-sm p-1"
+          <div
+            v-if="!showEditFields || !item.checked"
+            :class="[
+              labels(item.priority),
+              'w-40 rounded p-2',
+              'text-center text-white text-sm'
+            ]"
           >
             {{ item.priority }}
           </div>
+          <t-select
+            v-else
+            v-model="item.priority"
+            :options="[
+              'No Priority',
+              'Life Changing',
+              'Important',
+              'Meh'
+            ]"
+          />
+
         </div>
       </template>
       <template v-else>
@@ -77,12 +117,13 @@
     ]">
       <div class="flex flex-row mb-4 w-full">
         <t-input
-          id="to-do-input"
+          ref="toDoInput"
           v-model="toDoInput"
           placeholder="Add your next to-do"
-          class="mr-4 w-full sm:h-16 sm:text-xl rounded"
+          class="mr-4 w-full sm:h-16 sm:text-xl"
           value=""
           name="to-do"
+          maxlength="100"
         />
         <t-select
           id="to-do-priority"
@@ -94,14 +135,9 @@
             'hidden sm:block',
             'mr-8',
             'sm:text-xl',
-            'rounded',
             {'text-gray-400': prioritySelect === ''}
           ]"
-          :options="[
-            'Life Changing',
-            'Important',
-            'Meh'
-          ]"
+          :options="priorityOptions"
         />
         <button
           type="button"
@@ -158,22 +194,50 @@ export default {
     return {
       toDoList: [],
       toDoInput: '',
-      prioritySelect: ''
+      prioritySelect: '',
+      priorityOptions: [
+        'Life Changing',
+        'Important',
+        'Meh'
+      ],
+      checkAll: false,
+      showEditFields: false
+    }
+  },
+  watch: {
+    itemsChecked (arr) {
+      if (!arr.length) {
+        this.showEditFields = false
+      }
+      
+      if (arr.length === this.toDoList.length) {
+        this.checkAll = true  
+      } else {
+        this.checkAll = false
+      }
+    },
+    checkAll (bool) {
+      if (bool) {
+        this.toDoList.forEach(obj => obj.checked = true)
+      }
     }
   },
   computed: {
     itemsChecked () {
       return this.toDoList.filter(obj => obj.checked)
     },
+    itemsUnChecked () {
+      return this.toDoList.filter(obj => !obj.checked)
+    },
     labels () {
       return priority => {
         switch (priority.toLowerCase()) {
           case 'life changing':
-            return 'bg-blue-500'
+            return 'bg-green-500'
           case 'important':
-            return 'bg-red-500'
+            return 'bg-yellow-500'
           case 'meh':
-            return 'bg-gray-400'
+            return 'bg-blue-400'
           default:
             return 'border border-dashed rounded text-gray-400'
         }
@@ -184,16 +248,31 @@ export default {
     addToDo () {
       this.toDoList.push({
         name: this.toDoInput,
-        priority: this.prioritySelect ? this.prioritySelect : 'No priority',
+        priority: this.prioritySelect ? this.prioritySelect : 'No Priority',
         checked: false,
         timeStamp: new Date()
       })
       this.clearFields()
+      this.$refs.toDoInput.focus()
     },
     clearFields () {
       this.toDoInput = '',
       this.prioritySelect = ''
+    },
+    clickCheckAll(val) {
+      if (!val) {
+        this.toDoList.forEach(obj => obj.checked = false)
+      }
+    },
+    editChecked () {
+      this.showEditFields = !this.showEditFields
+    },
+    deleteChecked () {
+      this.toDoList = this.itemsUnChecked
     }
+  },
+  mounted () {
+    this.$refs.toDoInput.focus()
   }
 }
 </script>
