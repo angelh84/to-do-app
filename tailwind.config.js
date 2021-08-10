@@ -5,6 +5,9 @@ module.exports = {
     extend: {
       width: {
         '600': '600px'
+      },
+      zIndex: {
+        '-1': '-1',
       }
     },
   },

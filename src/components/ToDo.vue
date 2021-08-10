@@ -2,13 +2,18 @@
   <div class="flex h-full flex-col justify-between">
 
     <!-- Header buttons -->
-    <div class="flex fixed justify-between bottom-28 sm:top-0 sm:bottom-auto left-0 w-full p-6">
+    <div :class="[
+      'flex justify-between',
+      'fixed top-0 left-0',
+      'bg-gray-100',
+      'w-full p-4 lg:p-6',
+      'transition-opacity opacity-0 duration-700 pointer-events-none',
+      {'opacity-100 pointer-events-auto': itemsChecked.length}
+    ]">
       <t-button 
         variant="text"
         :class="[
-          'text-color text-sm text-red-500 hover:underline',
-          'transition-opacity opacity-0 duration-700 pointer-events-none',
-          {'opacity-100 pointer-events-auto': itemsChecked.length}
+          'text-color text-sm text-red-500 hover:underline'
         ]"
         @click="deleteChecked"
       >
@@ -18,9 +23,7 @@
         variant="secondary"
         :class="[
           'rounded text-sm',
-          'transition-opacity opacity-0 duration-700 pointer-events-none',
-          {'bg-yellow-100': showEditFields},
-          {'opacity-100 pointer-events-auto': itemsChecked.length}
+          {'bg-yellow-100': showEditFields}
         ]"
         @click="editChecked"
       >
@@ -31,7 +34,7 @@
     <!-- Table -->
     <div :class="[
       'h-full w-full sm:w-600 mx-auto',
-      'pt-10 sm:pt-32 pr-5 pb-3 pl-5 mb-44 sm:mb-36',
+      'pt-24 lg:pt-32 pr-5 pb-3 pl-5 mb-36',
       'overflow-auto'
     ]">
       <div 
@@ -52,7 +55,14 @@
           v-if="toDoList.length"
           v-model="sort"
           placeholder="Sort"
-          fixedClasses="border-0 block w-52 sm:w-44 px-3 py-2 transition duration-100 ease-in-out focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          :fixedClasses="[
+            'border-0 block w-52 sm:w-48',
+            '-mr-4 px-3 py-2', 
+            'transition duration-100 ease-in-out',
+            'focus:ring-2 focus:ring-blue-500',
+            'focus:outline-none focus:ring-opacity-50',
+            'disabled:opacity-50 disabled:cursor-not-allowed'
+          ]"
           :class="[
             'text-xs sm:text-sm',
             {'text-gray-400': sort === 'Sort' || sort === ''}
@@ -258,6 +268,9 @@ export default {
     itemsUnChecked () {
       return this.toDoList.filter(obj => !obj.checked)
     },
+    sortLocal () {
+      return this.toDoList.slice().sort((a, b) => a.timeStamp - b.timeStamp)
+    },
     sortByTimestamp () {
       return this.toDoList.slice().sort((a, b) => a.timeStamp - b.timeStamp)
     },
@@ -276,13 +289,35 @@ export default {
       }
     },
     sortOptions () {
-      const sortOptions = ['Order (default)']
+      const sortOptions = [{
+        name: 'Order (default)',
+        value: 0
+      }]
+      let unique = []
+
+      // constructs array of objects with a 
+      // value property to sort by priority value
       this.toDoList.forEach(obj => {
-        sortOptions.push(obj.priority)
+        const isNoPriority = obj.priority === 'No Priority'
+        sortOptions.push({
+          name: obj.priority,
+          value:  isNoPriority 
+            ? this.priorityOptions.length 
+            : this.priorityOptions.indexOf(obj.priority) + 1
+        })
       })
+
+      // sorts by value
+      sortOptions.sort((a, b) => a.value - b.value)
+
+      // we pluck the name and put it a unique array
+      // so we can remove duplicates via Set()
+      sortOptions.forEach(obj => unique.push(obj.name))
+
+      // Only include uniques in the right order
+      unique = [...new Set(unique)]
       
-      // Set constructor returns only uniques in an array
-      return [...new Set(sortOptions)]
+      return unique
     }
   },
   methods: {
@@ -316,9 +351,11 @@ export default {
       const filterOutPriority = this.toDoList.filter(obj => obj.priority !== sort)
       const sortedArr = [...filterByPriority, ...filterOutPriority]
 
-      this.toDoList = sort === '' || sort === 'Order (default)'
-        ? this.sortByTimestamp
-        : sortedArr
+      if (sort === '' || sort === 'Order (default)') {
+        this.toDoList = this.sortByTimestamp
+      } else {
+        this.toDoList = sortedArr
+      }
     },
     editChecked () {
       this.showEditFields = !this.showEditFields
@@ -332,7 +369,15 @@ export default {
       this.toDoList = this.itemsUnChecked
     },
     getToDoList () {
-      return JSON.parse(localStorage.getItem('toDoList'))
+      const listParse = JSON.parse(localStorage.getItem('toDoList'))
+      // need to convert timeStamp back from string to new Date()
+      if (listParse && listParse.length) {
+        listParse.forEach(obj => {
+          obj.timeStamp = new Date(obj.timeStamp)
+        })
+        return listParse
+      }
+      return undefined
     },
     saveToDoList () {
       localStorage.setItem('toDoList', JSON.stringify(this.toDoList))
@@ -342,7 +387,7 @@ export default {
     // Load toDoList from localStorage if localStorage is 
     // available and the toDoList property has length
     const localStorageList = this.getToDoList()
-    if (localStorage && localStorageList && localStorageList.length) {
+    if (localStorage && localStorageList) {
       this.toDoList = localStorageList
     }
   },
